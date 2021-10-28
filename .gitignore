@@ -1,0 +1,5 @@
+slides/
+library/
+practical/**/*.log
+practical/**/*.pdf
+tutorials/*.pdf
