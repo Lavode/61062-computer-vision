@@ -121,10 +121,11 @@
 
 \chapter{Practical - Report}
 
-For the whole report, assume that we are working on a $m \times n$ image. We
-define indices the way they are commonly defined for 2D matrices, starting at
-$(0, 0)$ in the top left, the first coordinate indicating the row, the second
-coordinate indicating the column.
+For the whole report, assume that we are working on a $m \times n$ image with
+the first dimension being its width. We define indices the way they are
+commonly defined for 2D matrices, starting at $(0, 0)$ in the top left, the
+first coordinate indicating the row, the second coordinate indicating the
+column.
 
 As an example, a $4 \times 3$ image would have the following pixels:
 \[
@@ -139,7 +140,7 @@ As an example, a $4 \times 3$ image would have the following pixels:
 
 Starting with the provided discretization of the data term:
 \[
-		\abs*{u \times k - g}^2 = \sum_{i=0}^{m-1} \sum_{j=0}^{n-1} \abs*{g[i, j] - \sum_{p=0}^{i} \sum_{q=0}^{i} k[p, q] \cdot u[i - p + 1, j - q + 1]}_2^2
+		\abs*{u \times k - g}^2 = \sum_{i=0}^{m-1} \sum_{j=0}^{n-1} \abs*{g[i, j] - \sum_{p=0}^{1} \sum_{q=0}^{1} k[p, q] \cdot u[i - p + 1, j - q + 1]}_2^2
 \]
 
 We simplify the data term by substituting the assigned blur kernel $k_0$:
