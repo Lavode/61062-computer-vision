@@ -139,6 +139,7 @@ As an example, a $4 \times 3$ image would have the following pixels:
 \]
 
 \section{Derivative of the data term}
+\label{sec:derivative_of_data_term}
 
 Starting with the provided discretization of the data term:
 \[
@@ -264,6 +265,7 @@ Then the derivatives for the four cases above follow directly:
 \]
 
 \section{Derivative of Gaussian prior}
+\label{sec:derivative_of_gaussian}
 
 Starting with the provided discretization of the Gaussian prior, adjusted for a
 $m \times n$ image:
@@ -546,6 +548,7 @@ As before, let $f(\hat{i}, \hat{j})$ denote the summand of $A[u]$ for $i =
 \end{align*}
 
 \section{Derivative of anisotropic prior}
+\label{sec:derivative_of_anisotropic}
 
 Observe that the discretization of the anisotropic prior is structured
 extremely similar to the discretization of the Gaussian prior, with the sole
@@ -712,67 +715,85 @@ Then the derivatives for the eight cases above follow directly:
 
 \begin{align*}
 		\nabla_{A, A} = 
-		  4 \cdot u[i, j] - 2 \cdot u[i + 1, j] - 2 \cdot u[i, j + 1]
+		  \sgn(u[i, j] - u[i + 1, j]) + \sgn(u[i, j] - u[i, j + 1]) \\
 \end{align*}
 
 \subsubsection{Case \emph{B}}
 
 \begin{align*}
 		\nabla_{A, B} = 
-		  6 \cdot u[i, j] - 2 \cdot u[i - 1, j] - 2 \cdot u[i + 1, j] - 2 \cdot u[i, j + 1]
+		  \sgn(u[i, j] - u[i - 1, j]) + \sgn(u[i, j] - u[i + 1, j]) + \sgn(u[i, j] - u[i, j + 1])
 \end{align*}
 
 \subsubsection{Case \emph{C}}
 
 \begin{align*}
 		\nabla_{A, C} =
-		  4 \cdot u[i, j] - 2 \cdot u[i - 1, j] - 2 \cdot u[i, j + 1]
+		  \sgn(u[i, j] - u[i - 1, j]) + \sgn(u[i, j] - u[i, j + 1])
 \end{align*}
 
 \subsubsection{Case \emph{D}}
 
 \begin{align*}
 		\nabla_{A, D} = 
-		  6 \cdot u[i, j] - 2 \cdot u[i - 1, j] - 2 \cdot u[i, j - 1] - 2 \cdot u[i, j + 1]
+		  \sgn(u[i, j] - u[i - 1, j]) + \sgn(u[i, j] - u[i, j - 1]) + \sgn(u[i, j] - u[i, j + 1])
 \end{align*}
 
 \subsubsection{Case \emph{E}}
 
 \begin{align*}
 		\nabla_{A, E} =
-		  4 \cdot u[i, j] - 2 \cdot u[i - 1, j] - 2 \cdot u[i, j - 1]
+		  \sgn(u[i, j] - u[i - 1, j]) + \sgn(u[i, j] - u[i, j - 1])
 \end{align*}
 
 \subsubsection{Case \emph{F}}
 
 \begin{align*}
 		\nabla_{A, F} =
-		  6 \cdot u[i, j] - 2 \cdot u[i, j - 1] - 2 \cdot u[i + 1, j] - 2 \cdot u[i - 1, j]
+		  \sgn(u[i, j] - u[i, j -1]) + \sgn(u[i, j] - u[i + 1, j]) + \sgn(u[i, j] - u[i - 1, j])
 \end{align*}
 
 \subsubsection{Case \emph{G}}
 
 \begin{align*}
 		\nabla_{A, G} = 
-		  4 \cdot u[i, j] - 2 \cdot u[i, j - 1] - 2 \cdot u[i + 1, j]
+		  \sgn(u[i, j] - u[i, j -1]) + \sgn(u[i, j] - u[i + 1, j])
 \end{align*}
 
 \subsubsection{Case \emph{H}}
 
 \begin{align*}
 		\nabla_{A, H} =
-		  6 \cdot u[i, j] - 2 \cdot u[i + 1, j] - 2 \cdot u[i, j + 1] - 2 \cdot u[i, j - 1]
+		  \sgn(u[i, j] - u[i + 1, j]) + \sgn(u[i, j] - u[i, j + 1]) + \sgn(u[i, j] - u[i, j -1])
 \end{align*}
 
 \subsubsection{Case \emph{I}}
 
 \begin{align*}
 		\nabla_{A, I} =
-		  8 \cdot u[i, j] - 2 \cdot u[i + 1, j] - 2 \cdot u[i, j + 1] - 2 \cdot u[i - 1, j] - 2 \cdot u[i, j - 1]
+		  & \sgn(u[i, j] - u[i + 1, j]) + \sgn(u[i, j] - u[i, j + 1]) + \\
+		  & \sgn(u[i, j] - u[i - 1, j]) + \sgn(u[i, j] - u[i, j - 1])
 \end{align*}
 
 
 \section{Gradient of energy term}
+
+Now the gradient of the full energy term follows easily as:
+\begin{align*}
+		\nabla_u E = 
+		\begin{cases}
+				\nabla_{D, X} & \text{ with no regularization} \\
+				\nabla_{D, X} + \lambda \nabla_{G, Y} & \text{ with Gaussian regularization} \\
+				\nabla_{D, X} + \lambda \nabla_{A, Y} & \text{ with anisotropic regularization}
+		\end{cases}
+\end{align*}
+
+Where, given the pixel position $(i, j)$, $\nabla_{D, X}$ is the appropriate
+derivative of the data term as per section \ref{sec:derivative_of_data_term},
+$\nabla_{G, Y}$ the appropriate derivative of the Gaussian prior as per section
+\ref{sec:derivative_of_gaussian}, and $\nabla_{A, Y}$ the appropriate
+derivative of the anisotropic prior as per section
+\ref{sec:derivative_of_anisotropic} respectively.
 
 \printbibliography
 
