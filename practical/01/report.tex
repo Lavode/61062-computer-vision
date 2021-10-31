@@ -75,6 +75,8 @@
 \DeclarePairedDelimiter\norm{\lVert}{\rVert}
 \DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
 
+\DeclareMathOperator{\sgn}{sgn}
+
 % Bullet point
 \newcommand{\tabitem}{~~\llap{\textbullet}~~}
 
@@ -293,7 +295,7 @@ that there are eight possible cases, visualized in figure
 
 \begin{figure}
 		\centering
-		\includegraphics[width=0.6\textwidth]{resources/gaussian_prior_derivatives.drawio.png}
+		\includegraphics[width=0.6\textwidth]{resources/gaussian_prior_derivatives.png}
 		\caption{Regions of derivatives of gaussian prior}
 		\label{fig:gaussian_prior_derivatives}
 \end{figure}
@@ -490,7 +492,285 @@ Then the derivatives for the eight cases above follow directly:
 
 \section{Discretization of anisotropic prior}
 
+Starting with the anisotropic regularization term, rewritten for a $m \times n$
+image:
+
+\[
+		R[u] = \abs{\nabla u}_1 = \sum_{i = 0}^{n - 1} \sum_{j = 0}^{m - 1} \abs{\nabla u[i, j]}_1
+\]
+
+We now approximate the gradient using forward differences with $\epsilon = 1$:
+\[
+		\nabla u[i, j] \approx \begin{bmatrix}
+				u[i + 1, j] - u[i, j] \\
+				u[i, j + 1] - u[i, j]
+		\end{bmatrix}
+\]
+
+And as such its L1 norm:
+\[
+		\abs{\nabla u[i, j]}_1 \approx \abs{u[i + 1, j] - u[i, j]} + \abs{u[i, j + 1] - u[i, j]}
+\]
+
+To ensure this formula is well-defined, the right and bottom edge must be
+handled specially. We assume that pixels outside the image are repeated values
+of their closest analogue within the image, implying that those differences are
+zero. Then:
+\begin{align*}
+		\abs{\nabla u[i, j]}_1 \approx \begin{cases}
+				\abs{u[i + 1, j] - u[i, j]} + \abs{u[i, j + 1] - u[i, j]} & i \in [1, n - 2], j \in [1, m - 2] \\
+				\abs{u[i + 1, m - 1] - u[i, m - 1]} & i \in [1, n - 2], j = m - 1 \\
+				\abs{u[n - 1, j + 1] - u[n - 1, j]} & i = n - 1, j \in [1, m - 2] \\
+				0 & i = n - 1, j = m - 1
+		\end{cases}
+\end{align*}
+
+Thus we can discretize our regularization term as follows:
+\begin{align*}
+		A[u] \coloneqq 
+		     & \sum_{i=0}^{n-2} \sum_{j=0}^{m-2} \left(\abs{u[i + 1, j] - u[i, j]} + \abs{u[i,j + 1] - u[i, j]}\right) \\
+			 & + \sum_{i=0}^{n-2} \left(\abs{u[i + 1, m - 1] - u[i, m - 1]}\right) \\
+			 & + \sum_{j=0}^{m-2} \left(\abs{u[n - 1, j + 1] - u[n - 1, j]}\right)
+\end{align*}
+
+As before, let $f(\hat{i}, \hat{j})$ denote the summand of $A[u]$ for $i =
+\hat{i}, j = \hat{j}$.  That is:
+
+\begin{align*}
+		f(i, j) \coloneqq 
+		\begin{cases}
+				\abs{u[i + 1, j] - u[i, j]} + \abs{u[i, j + 1] - u[i, j]}, & i \in [0, n - 2], j \in [0, m - 2] \\
+				\abs{u[i + 1, m - 1] - u[i, m - 1]}, & i \in [0, n - 2], j = m - 1 \\
+				\abs{u[n - 1, j + 1] - u[n - 1, j]}, & i = n - 1, j \in [0, m - 2]
+		\end{cases}
+\end{align*}
+
 \section{Derivative of anisotropic prior}
+
+Observe that the discretization of the anisotropic prior is structured
+extremely similar to the discretization of the Gaussian prior, with the sole
+exception that the square function is replaced by the absolute value. This
+allows to significantly reduce the manual labour involved in deriving the
+derivatives.
+
+\subsection{Cases for partial derivation}
+
+First, as the sum has the same structure, the exact same cases as for the
+Gaussian prior will be relevant. These are, once again, shown in figure
+\ref{fig:anisotropic_prior_derivatives}
+
+\begin{figure}
+		\centering
+		% Yup, it's the same image as the Gaussian
+		\includegraphics[width=0.6\textwidth]{resources/gaussian_prior_derivatives.png}
+		\caption{Regions of derivatives of anisotropic prior}
+		\label{fig:anisotropic_prior_derivatives}
+\end{figure}
+
+
+\subsubsection{Case \emph{A}}
+
+For $i = j = 0$, the factors of the sum will take on the form $u[i, j]$ for
+$f(i, j)$. As such:
+
+\begin{align*}
+		\nabla_{A, A} \coloneqq \frac{\partial A[u]}{\partial u[i, j]} = 
+		  \frac{\partial f(i, j)}{\partial u[i, j]}
+\end{align*}
+
+\subsubsection{Case \emph{B}}
+
+For $1 \leq i \leq n - 2$, $j = 0$, the factors of the sum will take on the
+form $u[i, j]$ for $f(i - 1, j)$ and $f(i, j)$. As such:
+
+\begin{align*}
+		\nabla_{A, B} \coloneqq \frac{\partial A[u]}{\partial u[i, j]} = 
+		  \frac{\partial f(i - 1, j)}{\partial u[i, j]} 
+		  + \frac{\partial f(i, j)}{\partial u[i, j]}
+\end{align*}
+
+\subsubsection{Case \emph{C}}
+
+For $i = n - 1$, $j = 0$, the factors of the sum will take on the form $u[i,
+j]$ for $f(i - 1, j)$ and $f(i, j)$. As such:
+
+\begin{align*}
+		\nabla_{A, C} \coloneqq \frac{\partial A[u]}{\partial u[i, j]} = 
+		  \frac{\partial f(i - 1, j)}{\partial u[i, j]} 
+		  + \frac{\partial f(i, j)}{\partial u[i, j]}
+\end{align*}
+
+\subsubsection{Case \emph{D}}
+
+For $i = n - 1$, $1 \leq j \leq m - 2$, the factors of the sum will take on the
+form $u[i, j]$ for $f(i - 1, j)$, $f(i, j - 1)$ and $f(i, j)$. As such:
+
+\begin{align*}
+		\nabla_{A, D} \coloneqq \frac{\partial A[u]}{\partial u[i, j]} = 
+		  \frac{\partial f(i - 1, j)}{\partial u[i, j]} 
+		  + \frac{\partial f(i, j - 1)}{\partial u[i, j]} 
+		  + \frac{\partial f(i, j)}{\partial u[i, j]}
+\end{align*}
+
+\subsubsection{Case \emph{E}}
+
+For $i = n - 1$, $j = m - 1$, the factors of the sum will take on the form
+$u[i, j]$ for $f(i - 1, j)$ and $f(i, j - 1)$. As such:
+
+\begin{align*}
+		\nabla_{A, E} \coloneqq \frac{\partial A[u]}{\partial u[i, j]} = 
+		  \frac{\partial f(i - 1, j)}{\partial u[i, j]}
+		  + \frac{\partial f(i, j - 1)}{\partial u[i, j]}
+\end{align*}
+
+\subsubsection{Case \emph{F}}
+
+For $1 \leq i \leq n - 2$, $j = m - 1$, the factors of the sum will take on the
+form $u[i, j]$ for $f(i - 1, j)$, $f(i, j - 1)$ and $f(i, j)$. As such:
+
+\begin{align*}
+		\nabla_{A, F} \coloneqq \frac{\partial A[u]}{\partial u[i, j]} = 
+		  \frac{\partial f(i - 1, j)}{\partial u[i, j]}
+		  + \frac{\partial f(i, j - 1)}{\partial u[i, j]}
+		  + \frac{\partial f(i, j)}{\partial u[i, j]}
+\end{align*}
+
+\subsubsection{Case \emph{G}}
+
+For $i = 0$, $j = m -1$, the factors of the sum will take on the form $u[i, j]$
+for $f(i, j - 1)$ and $f(i, j)$. As such:
+
+\begin{align*}
+		\nabla_{A, G} \coloneqq \frac{\partial A[u]}{\partial u[i, j]} = 
+		  \frac{\partial f(i, j - 1)}{\partial u[i, j]}
+		  + \frac{\partial f(i, j)}{\partial u[i, j]}
+\end{align*}
+
+\subsubsection{Case \emph{H}}
+
+For $i = 0$, $1 \leq j \leq m - 2$, the factors of the sum will take on the
+form $u[i, j]$ for $f(i, j - 1)$ and $f(i, j)$. As such:
+
+\begin{align*}
+		\nabla_{A, H} \coloneqq \frac{\partial A[u]}{\partial u[i, j]} = 
+		  \frac{\partial f(i, j - 1)}{\partial u[i, j]}
+		  + \frac{\partial f(i, j)}{\partial u[i, j]}
+\end{align*}
+
+\subsubsection{Case \emph{I}}
+
+For $1 \leq i \leq n - 2$, $1 \leq j \leq m - 2$, the factors of the sum will
+take on the form $u[i, j]$ for $f(i - 1, j)$, $f(i, j - 1)$ and $f(i, j)$. As
+such:
+
+\begin{align*}
+		\nabla_{A, I} \coloneqq \frac{\partial A[u]}{\partial u[i, j]} = 
+		  \frac{\partial f(i - 1, j)}{\partial u[i, j]}
+		  + \frac{\partial f(i, j - 1)}{\partial u[i, j]}
+		  + \frac{\partial f(i, j)}{\partial u[i, j]}
+\end{align*}
+
+\subsection{Determining the derivatives}
+
+Second, the replacement of the square function with the absolute value one will
+, by the chain rule, only affect the outer derivative. Compare the following
+two derivatives:
+
+\begin{align*}
+		g(x) & \coloneqq \left(f(x)\right)^2 \\
+		h(x) & \coloneqq \abs*{f(x)} \\
+		g'(x) & = 2 f(x) \cdot f'(x) \\
+		h'(x) & = \sgn(f(x)) \cdot f(x)'
+\end{align*}
+
+As such the derivatives for the anisotropic prior follow directly from the
+derivatives of the Gaussian prior, by simply replacing occurences of $2$ by the
+$\sgn$ function. Some care has to be taken as the sign function, unlike
+multiplication, does not distribute over addition (respectively subtraction).
+Some simplifications are made using the fact that $-\sgn(x) = \sgn(-x)$ for $x
+\in \mathbb{R}$.
+
+\begin{align*}
+		\frac{\partial f(i - 1, j)}{\partial u[i, j]} & =
+		  \sgn(u[i, j] - u[i - 1, j]) \\
+		\frac{\partial f(i, j - 1)}{\partial u[i, j]} & =
+		  \sgn(u[i, j] - u[i, j - 1]) \\
+		\frac{\partial f(i, j)}{\partial u[i, j]} & =
+		  \begin{cases}
+				  \sgn(u[i, j] - u[i + 1, j]) + \sgn(u[i, j] - u[i, j - 1])
+				    & i \in [0, n - 2], j \in [0, m - 2] \\
+				  \sgn(u[i, j] - u[i + 1, j])
+				    & i \in [0, n - 2], j = m - 1 \\
+				  \sgn(u[i, j] - u[i, j + 1])
+					& i = n - 1, j \in [0, m - 2]
+		  \end{cases} \\
+\end{align*}
+
+Then the derivatives for the eight cases above follow directly:
+
+\subsubsection{Case \emph{A}}
+
+\begin{align*}
+		\nabla_{A, A} = 
+		  4 \cdot u[i, j] - 2 \cdot u[i + 1, j] - 2 \cdot u[i, j + 1]
+\end{align*}
+
+\subsubsection{Case \emph{B}}
+
+\begin{align*}
+		\nabla_{A, B} = 
+		  6 \cdot u[i, j] - 2 \cdot u[i - 1, j] - 2 \cdot u[i + 1, j] - 2 \cdot u[i, j + 1]
+\end{align*}
+
+\subsubsection{Case \emph{C}}
+
+\begin{align*}
+		\nabla_{A, C} =
+		  4 \cdot u[i, j] - 2 \cdot u[i - 1, j] - 2 \cdot u[i, j + 1]
+\end{align*}
+
+\subsubsection{Case \emph{D}}
+
+\begin{align*}
+		\nabla_{A, D} = 
+		  6 \cdot u[i, j] - 2 \cdot u[i - 1, j] - 2 \cdot u[i, j - 1] - 2 \cdot u[i, j + 1]
+\end{align*}
+
+\subsubsection{Case \emph{E}}
+
+\begin{align*}
+		\nabla_{A, E} =
+		  4 \cdot u[i, j] - 2 \cdot u[i - 1, j] - 2 \cdot u[i, j - 1]
+\end{align*}
+
+\subsubsection{Case \emph{F}}
+
+\begin{align*}
+		\nabla_{A, F} =
+		  6 \cdot u[i, j] - 2 \cdot u[i, j - 1] - 2 \cdot u[i + 1, j] - 2 \cdot u[i - 1, j]
+\end{align*}
+
+\subsubsection{Case \emph{G}}
+
+\begin{align*}
+		\nabla_{A, G} = 
+		  4 \cdot u[i, j] - 2 \cdot u[i, j - 1] - 2 \cdot u[i + 1, j]
+\end{align*}
+
+\subsubsection{Case \emph{H}}
+
+\begin{align*}
+		\nabla_{A, H} =
+		  6 \cdot u[i, j] - 2 \cdot u[i + 1, j] - 2 \cdot u[i, j + 1] - 2 \cdot u[i, j - 1]
+\end{align*}
+
+\subsubsection{Case \emph{I}}
+
+\begin{align*}
+		\nabla_{A, I} =
+		  8 \cdot u[i, j] - 2 \cdot u[i + 1, j] - 2 \cdot u[i, j + 1] - 2 \cdot u[i - 1, j] - 2 \cdot u[i, j - 1]
+\end{align*}
+
 
 \section{Gradient of energy term}
 
