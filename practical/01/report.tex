@@ -141,9 +141,10 @@ As an example, a $4 \times 3$ image would have the following pixels:
 \section{Derivative of the data term}
 \label{sec:derivative_of_data_term}
 
-Starting with the provided discretization of the data term:
+Starting with the provided discretization of the data term, rewritten for $m
+\times n$ images:
 \[
-		\abs*{u \times k - g}^2 = \sum_{i=0}^{m-1} \sum_{j=0}^{n-1} \abs*{g[i, j] - \sum_{p=0}^{1} \sum_{q=0}^{1} k[p, q] \cdot u[i - p + 1, j - q + 1]}_2^2
+		\abs*{u \times k - g}^2 = \sum_{i=0}^{n-1} \sum_{j=0}^{m-1} \abs*{g[i, j] - \sum_{p=0}^{1} \sum_{q=0}^{1} k[p, q] \cdot u[i - p + 1, j - q + 1]}_2^2
 \]
 
 We simplify the data term by substituting the assigned blur kernel $k_0$:
@@ -156,14 +157,15 @@ We simplify the data term by substituting the assigned blur kernel $k_0$:
 
 \begin{align*}
 		D[u] & \coloneqq \abs*{u \times k_0 - g}^2 \\ 
-			 & = \sum_{i=0}^{m-1} \sum_{j=0}^{n-1} \abs*{g[i, j] - \frac{1}{2} \cdot (u[i + 1, j + 1] + u[i + 1, j])}_2^2 \\
-			 & = \sum_{i=0}^{m-1} \sum_{j=0}^{n-1} \left(g[i, j] - \frac{1}{2} \cdot (u[i + 1, j + 1] + u[i + 1, j])\right)^2
+			 & = \sum_{i=0}^{n-1} \sum_{j=0}^{m-1} \abs*{g[i, j] - \frac{1}{2} \cdot (u[i + 1, j + 1] + u[i + 1, j])}_2^2 \\
+			 & = \sum_{i=0}^{n-1} \sum_{j=0}^{m-1} \left(g[i, j] - \frac{1}{2} \cdot (u[i + 1, j + 1] + u[i + 1, j])\right)^2
 \end{align*}
 
 Where the second simplification is due to the $l_2$ norm of a scalar being
 equal to the absolute value of a scalar --- and the square of a real value
 being equal to its absolute square. We denote this kernel-specific data term as
-$D[u]$ to abbreivate notation. Let further $f(i, j)$ denote the summand:
+$D[u]$ to abbreivate notation. Let further $f(\hat{i}, \hat{j})$ denote the
+summand of $D[u]$ at $i = \hat{i}$, $j = \hat{j}$. That is:
 
 \begin{align*}
 		f(i, j) & \coloneqq \left(g[i, j] - \frac{1}{2} \cdot (u[i + 1, j + 1] + u[i + 1, j])\right)^2
@@ -675,9 +677,9 @@ such:
 
 \subsection{Determining the derivatives}
 
-Second, the replacement of the square function with the absolute value one will
-, by the chain rule, only affect the outer derivative. Compare the following
-two derivatives:
+Second, the replacement of the square function with the absolute value one
+will, by the chain rule, only affect the outer derivative. Compare the
+following two derivatives:
 
 \begin{align*}
 		g(x) & \coloneqq \left(f(x)\right)^2 \\
@@ -690,7 +692,7 @@ As such the derivatives for the anisotropic prior follow directly from the
 derivatives of the Gaussian prior, by simply replacing occurences of $2$ by the
 $\sgn$ function. Some care has to be taken as the sign function, unlike
 multiplication, does not distribute over addition (respectively subtraction).
-Some simplifications are made using the fact that $-\sgn(x) = \sgn(-x)$ for $x
+Simplifications are possible by using the fact that $-\sgn(x) = \sgn(-x)$ for $x
 \in \mathbb{R}$.
 
 \begin{align*}
