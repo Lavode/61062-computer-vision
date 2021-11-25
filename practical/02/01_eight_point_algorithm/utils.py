@@ -101,6 +101,7 @@ def eight_points_algorithm(x1, x2, normalize=True):
     # from some slides I found.
     U, S, VH = np.linalg.svd(A)
     F = VH.transpose()[:, 8].reshape(3, 3)
+    print(f"Norm of F after solving with SVD: {np.linalg.norm(F)}")
 
     # Enforce that rank(F)=2
     # This requires us to take the SVD of F, throw out all but two of the
@@ -110,10 +111,12 @@ def eight_points_algorithm(x1, x2, normalize=True):
     S[2] = 0
     # SVD leads to decomposition F = (U * S) @ VH, so we'll rebuild it this way
     F = np.matmul(U * S, VH)
+    print(f"Norm of F after enforcing rank 2: {np.linalg.norm(F)}")
 
     if normalize:
         # t_2^t * F * t_1
         F = np.matmul(np.matmul(t2.transpose(), F), t1)
+        print(f"Norm of F after denormalization: {np.linalg.norm(F)}")
 
     return F
 
