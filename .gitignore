@@ -3,3 +3,4 @@ library/
 practical/**/*.log
 practical/**/*.pdf
 tutorials/*.pdf
+.ipynb_checkpoints/
