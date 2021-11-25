@@ -136,6 +136,9 @@ def right_epipole(F):
 
     return e
 
+def plot_epipole(e, plot):
+    plot.plot(e[0], e[1], "rx")
+
 
 def plot_epipolar_line(im, F, x, e, plot):
     """
