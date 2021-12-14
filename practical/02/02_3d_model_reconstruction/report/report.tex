@@ -121,15 +121,103 @@
 
 \chapter{Introduction}
 
-Hi
+The goal of the assignment was to reconstruct a 3D model given a set of 2D
+point correspondences. These 2D point correspondences were the result of two
+images taken of an object from two different cameras.
+
+As the point correspondences were noisy, outliers had to be eliminated by means
+of the RANSAC algorithm. \autocite{fischlerRandomSampleConsensus1981}
 
 \chapter{Methods}
 
-Hi
+\section{Elimination of outliers using RANSAC}
+
+In a first step, outliers were eliminated by means of the RANSAC algorithm.
+\autocite{fischlerRandomSampleConsensus1981} Summarizing, a random set of eight
+points was selected and the fundamental matrix estimated by means of the
+normalized eight-point algorithm
+\autocite{hartleyDefenseEightpointAlgorithm1997}. This process was repeated a
+fixed amount of times, and the fundamental matrix which lead to the lowest
+sum-of-squared errors between predicted and actual positions was used further.
+
+The fundamental matrix was then optimized by iteratively applying the
+normalized eight-point algorithm until the determined inliers, until the set of
+inliers did not change any further.
+
+\section{Calculation of essential matrix from fundamental matrix}
+
+Using the provided calibration matrix $K$ of the cameras, and the earlier
+calculated fundamental matrix $F$, the essential matrix $E$ was calculated as:
+
+\[
+		E = K^T F K
+\]
+
+\section{Decomposition of essential matrix into rotation matrix and translation vector}
+
+The rotation matrix $R$ and translation vector $t$ were then extracted from the
+essential matrix $E$ as described by Hartley and Zisserman
+\autocite{hartleyMultipleViewGeometry2003}. Summarizing, SVD was used to
+decompose $U \Sigma V^T = E$. $U, V^T \in SO(3)$ was enforced by multiplying $U$
+and $V^T$ with $-1$ respectively if their determinat was negative. Then, the two
+possible rotation matrices $R_1$ and $R_2$, as well as the two possible
+translaction vectors $t_1$ and $t_2$ followed:
+
+\begin{align*}
+		W & = \begin{pmatrix}
+				0 & 1 & 0 \\
+				-1 & 0 & 0 \\
+				0 & 0 & 1
+		\end{pmatrix} \\
+		R_1 & = U W V^T \\
+		R_2 & = U W^T V^T \\
+		t_1 & = -u_3 \\
+		t_2 & = u_3
+\end{align*}
+
+Where $u_3$ is the third column of $U$.
+
+The provided code then calculated which of the four possible camera matrices is
+the valid one.
+
+\section{Evaluating accuracy of estimated rotation and translation}
+
+Using the provided ground truth data containing the rotation matrices and
+translation vectors of the two cameras, the actual rotation matrix and
+translation vector of the transformation between the two cameras was
+calculated. These were then compared with the estimated ones by means of the L1
+norm, where the rotation matrices were first converted to Euler angles.
 
 \chapter{Results}
 
-Hi
+Figure \ref{fig:cow} shows the reconstruction of the object --- in this case a
+cow. Clearly the reconstruction looks quite decent by eye.
+
+\begin{figure}
+		\centering
+		\includegraphics[width=0.5\textwidth]{resources/cow.png}
+		\caption{Reconstruction of cow}
+		\label{fig:cow}
+\end{figure}
+
+Table \ref{tbl:errors} then also lists the L1 norm of the differences between
+the estimated and actual rotation matrix and translation vector. The errors
+being rather low further confirms that the reconstruction process went over
+fairly well.
+
+\begin{table}
+		\centering
+		\begin{tabular}{ll}
+				\toprule
+				Component & L1 norm of error \\
+				\midrule
+				Rotation matrix & $\approx 0.0615$ \\
+				Translation vector & $\approx 0.0074$ \\
+				\bottomrule
+		\end{tabular}
+		\caption{L1 norm of error of estimated camera components}
+		\label{tbl:errors}
+\end{table}
 
 \printbibliography
 

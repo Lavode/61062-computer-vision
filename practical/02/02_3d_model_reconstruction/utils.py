@@ -217,9 +217,6 @@ def decompose_essential_matrix(E, x1, x2):
         u = -u
     if np.linalg.det(v) < 0:
         v = -v
-    if np.abs(s[0] - s[1]) > 0.01 or s[2] != 0:
-        # Must admit I don't fully get this
-        s = np.diag([1, 1, 0])
 
     R1 = u @ pi_half_rotation_matrix @ v
     R2 = u @ pi_half_rotation_matrix.T @ v
